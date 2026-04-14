@@ -1,0 +1,6 @@
+apiVersion: v2
+appVersion: 0.1.0
+description: A Spring Boot Helm chart for Kubernetes. This Chart will be utilized by all the Java Springboot applications
+name: springboot-chart
+type: application
+version: 0.1.0

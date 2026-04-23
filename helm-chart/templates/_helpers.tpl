@@ -35,12 +35,14 @@ Common labels
 */}}
 {{- define "springboot-chart.labels" -}}
 helm.sh/chart: {{ include "springboot-chart.chart" . }}
-{{ include "springboot-chart.selectorLabels" . }}
+release: {{ .Release.Name }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- end }}
+{{ include "springboot-chart.selectorLabels" . }}
+{{ include "springboot-chart.customLabels" . }}
+{{- end -}}
 
 {{/*
 Selector labels
@@ -48,4 +50,37 @@ Selector labels
 {{- define "springboot-chart.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "springboot-chart.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end -}}
+
+{{/*
+Custom labels
+*/}}
+{{- define "springboot-chart.customLabels" -}}
+{{- range $key, $value := (.Values.deployment).labels -}}
+{{ $key }} : {{ $value | quote }}
+{{ end -}}
+{{- range $key, $value := (.Values.job).labels -}}
+{{ $key }} : {{ $value | quote }}
+{{ end -}}
+{{- end -}}
+
+{{/*
+Common annotations
+*/}}
+{{- define "springboot-chart.annotations" -}}
+{{- range $key, $value := .Values.podAnnotations -}}
+{{ $key }} : {{ $value | quote }}
 {{- end }}
+{{- end -}}
+
+{{/*
+HashiCorp Vault annotations
+*/}}
+{{- define "springboot-chart.annotations.vault" -}}
+{{- $defaultNamespace := printf "%s" .Values.envOverrides.env_type -}}
+{{- $defaultVaultRole := printf "vault-role-%s" .Values.envOverrides.pillar -}}
+vault.hashicorp.com/agent-inject: "true"
+vault.hashicorp.com/agent-init-first: "true"
+vault.hashicorp.com/role: {{ $defaultVaultRole | quote }}
+vault.hashicorp.com/namespace: {{ $defaultNamespace | quote }}
+{{- end -}}

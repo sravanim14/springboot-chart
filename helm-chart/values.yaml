@@ -171,3 +171,8 @@ podLabels: {}
 podSecurityContext: {}
 containerSecurityContext: {}
 
+autoscaling:
+  enabled: true
+  # minReplicas: 1
+  # maxReplicas: 4
+

@@ -11,6 +11,11 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
+      {{- if contains .Values.service.type "NodePort" -}}
+      {{- if not .Values.service.nodePort }}
+      {{- fail "ERROR: .Values.service.nodePort is required for .Values.service.type - NodePort" }}
+      {{- end }}
       nodePort: {{ .Values.service.nodePort }}
+      {{- end }}
   selector:
     {{- include "springboot-chart.selectorLabels" . | nindent 4 }}

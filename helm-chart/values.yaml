@@ -48,11 +48,17 @@ httpRoute:
 
 
 # Additional volumes on the output Deployment definition.
-volumes: []
-  # - name: foo
-  #   secret:
-  #     secretName: mysecret
-  #     optional: false
+#volumes: []
+volumes:
+  - name: "tmp"
+    mountPath: "/tmp"
+    emptyDir: 
+      medium: Memory
+      sizeLimit: "500Mi"
+  - name: cache-volume
+    mountPath: "/cache"
+    emptyDir:
+      sizeLimit: "500Mi"
 
 # Additional volumeMounts on the output Deployment definition.
 volumeMounts: []
@@ -60,17 +66,12 @@ volumeMounts: []
   #   mountPath: "/etc/foo"
   #   readOnly: true
 
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
-
 # This is for setting up a deployment configuration
 deployment:
   labels:
     APPID: "MAR"
     APPCODE: "12001"
+  
   # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
   replicaCount: 1
   restartPolicy: Never
@@ -85,7 +86,7 @@ deployment:
     # Overrides the image tag whose default is the chart appVersion.
     tag: ""
     # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-    imagePullSecrets: []
+    imagePullSecrets: [ regcred, db-secret, kafka-secret ]
   
   securityContext:
     readOnlyRootFilesystem: true
@@ -109,12 +110,24 @@ deployment:
       port: 5000
       scheme: HTTP
       #port: http
+    initialDelaySeconds: 40
+    periodSeconds: 25
+    timoutSeconds: 10
   readinessProbe:
     httpGet:
       path: /
       port: 5000
       scheme: HTTP
       #port: http
+    initialDelaySeconds: 40
+    periodSeconds: 25
+    timoutSeconds: 10
+  
+  nodeSelector:
+    pillar: risk
+    disk: ssd
+  tolerations: []
+  affinity: {}
 
 # This is for setting up a service configuration
 service:
@@ -148,5 +161,13 @@ podAnnotations: {}
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
 podLabels: {}
 
+# podSecurityContext:
+#   runAsUser: 1000            # All containers run as UID 1000
+#   runAsGroup: 3000           # Primary GID for all containers
+#   fsGroup: 2000              # Files created on mounted volumes get this GID
+#   supplementalGroups: [4000] # Additional groups if needed
+#   runAsNonRoot: true         # Prevents root execution
+
 podSecurityContext: {}
-  # fsGroup: 2000
+containerSecurityContext: {}
+

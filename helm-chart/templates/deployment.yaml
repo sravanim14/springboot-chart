@@ -1,80 +1,89 @@
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: {{ include "springboot-chart.fullname" . }}
   labels:
     {{- include "springboot-chart.labels" . | nindent 4 }}
+
 spec:
-  replicas: {{ .Values.deployment.replicaCount }}
+  replicas: {{ .Values.deployment.replicaCount | default 1 }}
   selector:
     matchLabels:
       {{- include "springboot-chart.selectorLabels" . | nindent 6 }}
   template:
-    metadata:
+
+    metadata: 
       annotations:
+        {{- include "springboot-chart.annotations" . | indent 8 }}
         {{- if hasKey .Values "vaultSecrets" -}}
         {{- if hasKey .Values.vaultSecrets "enabled" -}}
         {{- include "springboot-chart.annotations.vault" . | nindent 8 }}
         {{- end }}
-        {{- end }}    
-        {{- with .Values.podAnnotations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
+        {{- end }}      
       labels:
         {{- include "springboot-chart.labels" . | nindent 8 }}
-        {{- with .Values.podLabels }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
+    
     spec:
-      {{- with .Values.deployment.image.imagePullSecrets }}
       imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.podSecurityContext }}
+        {{- include "springboot-chart.imagePullSecrets" . | nindent 8 }}
       securityContext:
+        {{- include "springboot-chart.podSecurityContext" . | nindent 8 }}
+      {{- with .Values.deployment.nodeSelector }}
+      nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- with .Values.deployment.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.deployment.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.volumes }}
+      
+      volumes:
+        {{- include "springboot-chart.volumes" . | indent 8 }}     
+      {{- end }}  
+      
       containers:
         - name: {{ .Chart.Name }}
-          {{- with .Values.deployment.securityContext }}
           securityContext:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
+            {{- include "springboot-chart.containerSecurityContext" . | nindent 12 }}
           image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.deployment.image.pullPolicy }}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
-          {{- with .Values.deployment.livenessProbe }}
-          livenessProbe:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.deployment.readinessProbe }}
-          readinessProbe:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.deployment.resources }}
-          resources:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.volumeMounts }}
+
+          {{- if .Values.volumes }}
           volumeMounts:
-            {{- toYaml . | nindent 12 }}
+            {{- include "springboot-chart.volumeMounts" . | indent 12 }}
           {{- end }}
-      {{- with .Values.volumes }}
-      volumes:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+
+          {{- if or (not .Values.deployment.livenessProbe) 
+                    (not .Values.deployment.livenessProbe.httpGet.path) 
+                    (not .Values.deployment.livenessProbe.httpGet.port) }}
+          {{- fail "ERROR: .Values.deployment.livenessProbe.httpGet.path and .Values.deployment.livenessProbe.httpGet.port are required" }}
+          {{- end }}
+          livenessProbe:
+            {{- toYaml .Values.deployment.livenessProbe | nindent 12 }}
+
+          {{- if or (not .Values.deployment.readinessProbe) 
+                    (not .Values.deployment.readinessProbe.httpGet.path) 
+                    (not .Values.deployment.readinessProbe.httpGet.port) }}
+          {{- fail "ERROR: .Values.deployment.readinessProbe.httpGet.path and .Values.deployment.readinessProbe.httpGet.port are required" }}
+          {{- end }}
+          readinessProbe:
+            {{- toYaml .Values.deployment.readinessProbe | nindent 12 }}
+
+          {{- if or (not .Values.deployment.resources) 
+                    (not .Values.deployment.resources.limits) 
+                    (not .Values.deployment.resources.limits.cpu) 
+                    (not .Values.deployment.resources.limits.memory) }}
+          {{- fail "ERROR: deployment.resources.limits.cpu and deployment.resources.limits.memory are required" }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.deployment.resources | nindent 12 }}

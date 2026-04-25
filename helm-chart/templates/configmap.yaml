@@ -1,0 +1,18 @@
+{{- if .Values.appEnvOverride -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vars-{{ include "springboot-chart.fullname" . }}
+  #namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "springboot-chart.labels" . | nindent 4 }}
+data:
+  {{- range $key, $val := .Values.appEnvOverride }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}
+  {{- if .Values.envOverrides }}
+  {{- range $key, $val := .Values.envOverrides }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}
+  {{- end }}
+{{- end -}}

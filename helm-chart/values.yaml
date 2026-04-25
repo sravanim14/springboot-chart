@@ -143,11 +143,6 @@ appEnvOverride:
   spring.profiles.active: ""
   SWAGGER_UI_ENABLED: true
 
-envOverrides:
-  pillar: risk
-  env_type: ite
-  env_num: 01
-
 vaultSecrets:
   enabled: true
 
@@ -175,4 +170,7 @@ autoscaling:
   enabled: true
   # minReplicas: 1
   # maxReplicas: 4
+
+
+
 

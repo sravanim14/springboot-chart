@@ -4,7 +4,8 @@ metadata:
   name: {{ include "springboot-chart.fullname" . }}
   labels:
     {{- include "springboot-chart.labels" . | nindent 4 }}
-
+    {{ include "springboot-chart.selectorLabels" . | nindent 4 }}
+    {{ include "springboot-chart.customLabels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.deployment.replicaCount | default 1 }}
   selector:
@@ -22,7 +23,8 @@ spec:
         {{- end }}      
       labels:
         {{- include "springboot-chart.labels" . | nindent 8 }}
-    
+        {{ include "springboot-chart.selectorLabels" . | nindent 4 }}
+        {{ include "springboot-chart.customLabels" . | nindent 4 }}    
     spec:
       imagePullSecrets:
         {{- include "springboot-chart.imagePullSecrets" . | nindent 8 }}

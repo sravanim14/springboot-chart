@@ -4,6 +4,8 @@ metadata:
   name: {{ include "springboot-chart.fullname" . }}
   labels:
     {{- include "springboot-chart.labels" . | nindent 4 }}
+    {{ include "springboot-chart.selectorLabels" . | nindent 4 }}
+    {{ include "springboot-chart.customLabels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:

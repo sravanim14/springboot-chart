@@ -1,0 +1,10 @@
+envOverrides:
+  env_type: ite
+  env_num: 01
+  zone_group: nc
+  zone: nc
+  provider_region: ao
+  cluster_name: 
+  team_name: rfw
+  pillar_name: risk
+
